@@ -7,7 +7,7 @@ from mlp import MlpBuilder
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-n", "--network", required=True, help="network file name eg. ['-f ./test_mlp']")
-ap.add_argument("-d", "--db", required=True, help="Sample databse dir [eg. '-m ./DATA/MNIST/']")
+ap.add_argument("-d", "--db", required=False, help="Sample databse dir [eg. '-m ./DATA/MNIST/']", default="")
 ap.add_argument("--loader", required=False, help="data loader name [eg. '--laoder mnist']", default="mnist")
 args = vars(ap.parse_args())
 
@@ -21,6 +21,7 @@ print("MLP_FILE_NAME", MLP_FILE_NAME)
 print("DATA_LOADER", DATA_LOADER)
 
 loader = loaders.get_loader(DATA_LOADER)
+input_size, output_size = loader.get_network_constrains()
 # load validation samples
 v_features, v_labels = loader.load(DB_DIR, kind="test")
 
@@ -29,7 +30,7 @@ mlp = MlpBuilder.load_mlp(MLP_FILE_NAME)
 
 validation_performance = 0
 for i in tqdm(range(len(v_labels))):
-    x = helper.normalize(v_features[i])
+    x = v_features[i]
 
     mlp_prediction = mlp.predict(x)
     predicted_label = helper.get_class(mlp_prediction)
@@ -45,10 +46,10 @@ while True:
     
     for i in range(8):
         validation_index = randint(1, len(v_labels) - 1)
-        x = helper.normalize(v_features[validation_index])
+        x = v_features[validation_index]
         y_label = v_labels[validation_index]
 
-        y = helper.get_expected_output(y_label)
+        y = helper.get_expected_output(y_label, output_size)
         mlp_prediction = mlp.predict(x)
 
         class1 = helper.get_class(mlp_prediction)
@@ -57,7 +58,7 @@ while True:
         plt.subplot(241 + i)
 
         plt.title('e: {}, p: {}(s: {})'.format(y_label, class1, class2))
-        helper.plot(x)
+        loader.plot(x)
 
     plt.show()
 

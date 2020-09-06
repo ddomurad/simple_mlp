@@ -1,36 +1,32 @@
-import sys
+import sys, argparse
 import mnist_helper as mnist
-from mlp import MlpBuilder
 from tqdm import tqdm
+from mlp import MlpBuilder
 
-MLP_LOAD = None
-MNIST_DIR = None
-MLP_FILE_NAME = None
-ACT_TYPE = None
-HIDDEN_LAYER_SIZE = 0
-EPOCH_COUNT = 0
-MAX_ALPHA = 0
+ap = argparse.ArgumentParser()
+ap.add_argument("-m", "--model", required=True, help="new - create new mlp network model, load - load existing network model. [eg. '-n new']")
+ap.add_argument("-n", "--network", required=True, help="network file name eg. ['-f ./test_mlp']")
+ap.add_argument("-d", "--mnist_db", required=True, help="MNIST databse dir [eg. '-m ./DIGITS/']")
+ap.add_argument("-f", "--func", required=True, help="activation function type (tanh, ...). [eg. '-a tanh']")
+ap.add_argument("-l", "--layer", required=False, help="add hidden layers of giver size [eg. '-l 10,20'] - two hidden layers of size 10 and 20")
+ap.add_argument("-e", "--epoche", required=False, help="training epoche count [eg. '-e 10']")
+ap.add_argument("-a", "--alpha", required=False, help="training alpha value [eg. '-a 0.1']")
+args = vars(ap.parse_args())
 
-if len(sys.argv) < 8:
-    print("INVALID ARGS. EXPECTED ARGS: '[mlp_load] [mnist_dir]  [mlp_output_file]  [activation_type] [hidden_layer_size] [training_epoch_count] [max_alpha]'")
-    print("EXAMPLE: 'python train.py new ./DIGITS/ ./test_mlp tanh 0 10 0.1'")
-    exit()
-else:
-    MLP_LOAD = sys.argv[1]
-    MNIST_DIR = sys.argv[2]
-    MLP_FILE_NAME = sys.argv[3]
-    ACT_TYPE = sys.argv[4]
-    HIDDEN_LAYER_SIZE = int(sys.argv[5])
-    EPOCH_COUNT = int(sys.argv[6])
-    MAX_ALPHA = float(sys.argv[7])
-
+MLP_LOAD = args['model']
+MNIST_DIR = args['mnist_db']
+MLP_FILE_NAME = args['network']
+ACT_TYPE = args['func']
+HIDDEN_LAYERS = [int(l.tring()) for l in args['layer'].split(',')] if args['layer'] is not None else None
+EPOCH_COUNT = int(args['epoche'])
+MAX_ALPHA = float(args['alpha'])
 
 print("PARAMS:")
 print("MLP_LOAD", MLP_LOAD)
 print("MNIST_DIR", MNIST_DIR)
 print("MLP_FILE_NAME", MLP_FILE_NAME)
 print("ACT_TYPE", ACT_TYPE)
-print("HIDDEN_LAYER_SIZE", HIDDEN_LAYER_SIZE)
+print("HIDDEN_LAYERS", HIDDEN_LAYERS)
 print("EPOCH_COUNT", EPOCH_COUNT)
 print("MAX_ALPHA", MAX_ALPHA)
 
@@ -41,10 +37,10 @@ v_features, v_labels = mnist.load(MNIST_DIR, kind="t10k")
 # create new mlp
 mlp = None
 if MLP_LOAD == "new":
-    if HIDDEN_LAYER_SIZE == 0:
+    if HIDDEN_LAYERS is None:
         mlp = MlpBuilder.new_mlp((784, 10), ACT_TYPE)
     else:
-        mlp = MlpBuilder.new_mlp((784, HIDDEN_LAYER_SIZE, 10), ACT_TYPE)
+        mlp = MlpBuilder.new_mlp((784, *HIDDEN_LAYERS, 10), ACT_TYPE)
 else:
     mlp = MlpBuilder.load_mlp(MLP_FILE_NAME)
 

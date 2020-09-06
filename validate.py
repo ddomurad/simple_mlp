@@ -1,21 +1,17 @@
-import sys
+import sys, argparse
 from random import randint
 import mnist_helper as mnist
-from mlp import MlpBuilder
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from mlp import MlpBuilder
 
-MNIST_DIR = None
-MLP_FILE_NAME = None
+ap = argparse.ArgumentParser()
+ap.add_argument("-n", "--network", required=True, help="network file name eg. ['-f ./test_mlp']")
+ap.add_argument("-d", "--mnist_db", required=True, help="MNIST databse dir [eg. '-m ./DIGITS/']")
+args = vars(ap.parse_args())
 
-if len(sys.argv) < 2:
-    print("INVALID ARGS. EXPECTED ARGS: '[mnist_dir]  [mlp_input_file]'")
-    print("EXAMPLE: 'python train.py ./DIGITS/ ./test_mlp'")
-    exit()
-else:
-    MNIST_DIR = sys.argv[1]
-    MLP_FILE_NAME = sys.argv[2]
-
+MNIST_DIR = args['mnist_db']
+MLP_FILE_NAME = args['network']
 
 print("PARAMS:")
 print("MNIST_DIR", MNIST_DIR)

@@ -1,11 +1,11 @@
 import sys, argparse
-import loaders
+import loaders, helper
 import matplotlib.pyplot as plt
 from random import randint
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--db", required=True, help="Sample databse dir [eg. '-m ./DATA/MNIST/']")
-ap.add_argument("-s", "--sample_type", required=True, help="Sample type [eg. '-s t10k']")
+ap.add_argument("-s", "--sample_type", required=True, help="Sample type [eg. '-s test']")
 ap.add_argument("--loader", required=False, help="data loader name [eg. '--laoder mnist']", default="mnist")
 args = vars(ap.parse_args())
 
@@ -29,9 +29,9 @@ for i in range(1, 9):
     plt.subplot(240 + i)
 
     random_index = randint(0, samples_count-1)
-    preprocessed_data = loader.normalize(features[random_index])
+    preprocessed_data = helper.normalize(features[random_index])
 
-    loader.plot(preprocessed_data)
+    helper.plot(preprocessed_data)
     plt.title("label: {}".format(labels[random_index]))
 
 plt.show()

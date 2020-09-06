@@ -1,6 +1,6 @@
 import sys, argparse
 from random import randint
-import loaders
+import loaders, helper
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from mlp import MlpBuilder
@@ -22,17 +22,17 @@ print("DATA_LOADER", DATA_LOADER)
 
 loader = loaders.get_loader(DATA_LOADER)
 # load validation samples
-v_features, v_labels = loader.load(DB_DIR, kind="t10k")
+v_features, v_labels = loader.load(DB_DIR, kind="test")
 
 # create new mlp
 mlp = MlpBuilder.load_mlp(MLP_FILE_NAME)
 
 validation_performance = 0
 for i in tqdm(range(len(v_labels))):
-    x = loader.normalize(v_features[i])
+    x = helper.normalize(v_features[i])
 
     mlp_prediction = mlp.predict(x)
-    predicted_label = loader.get_class(mlp_prediction)
+    predicted_label = helper.get_class(mlp_prediction)
 
     if v_labels[i] == predicted_label:
         validation_performance += 1
@@ -45,19 +45,19 @@ while True:
     
     for i in range(8):
         validation_index = randint(1, len(v_labels) - 1)
-        x = loader.normalize(v_features[validation_index])
+        x = helper.normalize(v_features[validation_index])
         y_label = v_labels[validation_index]
 
-        y = loader.get_expected_output(y_label)
+        y = helper.get_expected_output(y_label)
         mlp_prediction = mlp.predict(x)
 
-        class1 = loader.get_class(mlp_prediction)
-        class2 = loader.get_second_class(mlp_prediction)
+        class1 = helper.get_class(mlp_prediction)
+        class2 = helper.get_second_class(mlp_prediction)
 
         plt.subplot(241 + i)
 
         plt.title('e: {}, p: {}(s: {})'.format(y_label, class1, class2))
-        loader.plot(x)
+        helper.plot(x)
 
     plt.show()
 

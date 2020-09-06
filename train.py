@@ -1,5 +1,5 @@
 import sys, argparse, random
-import loaders
+import loaders, helper
 from tqdm import tqdm
 from mlp import MlpBuilder
 
@@ -39,7 +39,7 @@ print("DATA_LOADER", DATA_LOADER)
 # load training and validation samples
 loader = loaders.get_loader(DATA_LOADER)
 t_features, t_labels = loader.load(DB_DIR, kind="train")
-v_features, v_labels = loader.load(DB_DIR, kind="t10k")
+v_features, v_labels = loader.load(DB_DIR, kind="test")
 
 # create new mlp
 mlp = None
@@ -53,9 +53,9 @@ def calc_mlp_performance():
     performance = 0
 
     for i in tqdm(range(len(v_labels))):
-        vx = loader.normalize(v_features[i])
+        vx = helper.normalize(v_features[i])
         mlp_prediction = mlp.predict(vx)
-        predicted_label = loader.get_class(mlp_prediction)
+        predicted_label = helper.get_class(mlp_prediction)
 
         if v_labels[i] == predicted_label:
             performance += 1
@@ -77,8 +77,8 @@ for t in range(EPOCH_COUNT):
     random.shuffle(trainign_indices)
 
     for i in tqdm(trainign_indices):
-        x = loader.normalize(t_features[i])
-        y = loader.get_expected_output(t_labels[i])
+        x = helper.normalize(t_features[i])
+        y = helper.get_expected_output(t_labels[i])
         training_avg_error += mlp.train(x, y, alpha)
 
     training_avg_error /= len(t_labels)

@@ -7,16 +7,16 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-m", "--model", required=True, help="new - create new mlp network model, load - load existing network model. [eg. '-n new']")
 ap.add_argument("-n", "--network", required=True, help="network file name eg. ['-f ./test_mlp']")
 ap.add_argument("-d", "--mnist_db", required=True, help="MNIST databse dir [eg. '-m ./DIGITS/']")
-ap.add_argument("-f", "--func", required=True, help="activation function type (tanh, ...). [eg. '-a tanh']")
+ap.add_argument("-f", "--func", required=False, help="activation function type (tanh, ...). [eg. '-a tanh']")
 ap.add_argument("-l", "--layer", required=False, help="add hidden layers of giver size [eg. '-l 10,20'] - two hidden layers of size 10 and 20")
-ap.add_argument("-e", "--epoche", required=False, help="training epoche count [eg. '-e 10']")
-ap.add_argument("-a", "--alpha", required=False, help="training alpha value [eg. '-a 0.1']")
+ap.add_argument("-e", "--epoche", required=True, help="training epoche count [eg. '-e 10']")
+ap.add_argument("-a", "--alpha", required=True, help="training alpha value [eg. '-a 0.1']")
 args = vars(ap.parse_args())
 
 MLP_LOAD = args['model']
 MNIST_DIR = args['mnist_db']
 MLP_FILE_NAME = args['network']
-ACT_TYPE = args['func']
+ACT_TYPE = args['func'] if args['func'] is not None else 'tanh'
 HIDDEN_LAYERS = [int(l.tring()) for l in args['layer'].split(',')] if args['layer'] is not None else None
 EPOCH_COUNT = int(args['epoche'])
 MAX_ALPHA = float(args['alpha'])

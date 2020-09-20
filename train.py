@@ -1,11 +1,11 @@
 import sys, argparse, random
 import loaders, helper
 from tqdm import tqdm
-from mlp import MlpBuilder
+import ffn
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-m", "--model", required=True, help="new - create new mlp network model, load - load existing network model. [eg. '-n new']")
-ap.add_argument("-n", "--network", required=True, help="network file name eg. ['-f ./test_mlp']")
+ap.add_argument("-m", "--model", required=True, help="new - create new ff network model, load - load existing network model. [eg. '-n new']")
+ap.add_argument("-n", "--network", required=True, help="network file name eg. ['-f ./test_network']")
 ap.add_argument("-d", "--db", required=False, help="Sample databse dir [eg. '-m ./DATA/MNIST/']", default="")
 ap.add_argument("-f", "--func", required=False, help="activation function type (tanh, relu). [eg. '-a tanh']", default="tanh")
 ap.add_argument("-l", "--layer", required=False, help="add hidden layers of giver size [eg. '-l 10,20'] - two hidden layers of size 10 and 20", default="")
@@ -17,9 +17,9 @@ ap.add_argument("--loader", required=False, help="data loader name [eg. '--laode
 args = vars(ap.parse_args())
 
 
-MLP_LOAD = args['model']
+NETWORK_LOAD = args['model']
 DB_DIR = args['db']
-MLP_FILE_NAME = args['network']
+NETWORK_FILE_NAME = args['network']
 ACT_TYPE = args['func']
 HIDDEN_LAYERS = [int(l.strip()) for l in args['layer'].split(',') if l]
 MAX_EPOCH_COUNT = int(args['epoche'])
@@ -29,9 +29,9 @@ DATA_LOADER = args['loader']
 TRAINING_GOAL = float(args['goal'])
 
 print("PARAMS:")
-print("MLP_LOAD", MLP_LOAD)
+print("NETWORK_LOAD", NETWORK_LOAD)
 print("DB_DIR", DB_DIR)
-print("MLP_FILE_NAME", MLP_FILE_NAME)
+print("NETWORK_FILE_NAME", NETWORK_FILE_NAME)
 print("ACT_TYPE", ACT_TYPE)
 print("HIDDEN_LAYERS", HIDDEN_LAYERS)
 print("MAX_EPOCH_COUNT", MAX_EPOCH_COUNT)
@@ -47,24 +47,24 @@ input_size, output_size = loader.get_network_constrains()
 t_features, t_labels = loader.load(DB_DIR, kind="train")
 v_features, v_labels = loader.load(DB_DIR, kind="test")
 
-# create new mlp
-mlp = None
-if MLP_LOAD == "new":
+# create new ffn
+network = None
+if NETWORK_LOAD == "new":
     NETWORK_SHAPE = (input_size, *HIDDEN_LAYERS, output_size)
     print("NEW NETWORK_SHAPE", NETWORK_SHAPE)
-    mlp = MlpBuilder.new_mlp(NETWORK_SHAPE, ACT_TYPE)
+    network = ffn.Builder.new_ffn(NETWORK_SHAPE, ACT_TYPE)
 else:
-    mlp = MlpBuilder.load_mlp(MLP_FILE_NAME)
+    network = ffn.Builder.load_ffn(NETWORK_FILE_NAME)
 
 
-def calc_mlp_performance():
+def calc_performance():
     performance = 0
 
     for i in tqdm(range(len(v_labels))):
         # vx = loader.normalize(v_features[i])
         vx = v_features[i]
-        mlp_prediction = mlp.predict(vx)
-        predicted_label = helper.get_class(mlp_prediction)
+        ffn_prediction = network.predict(vx)
+        predicted_label = helper.get_class(ffn_prediction)
 
         if v_labels[i] == predicted_label:
             performance += 1
@@ -72,7 +72,7 @@ def calc_mlp_performance():
     return performance / len(v_labels)
 
 
-max_validation_performance = calc_mlp_performance()
+max_validation_performance = calc_performance()
 alpha = MAX_ALPHA
 
 print("Start with performance = {}%".format(max_validation_performance*100))
@@ -91,7 +91,7 @@ for t in range(MAX_EPOCH_COUNT):
     for i in tqdm(trainign_indices):
         x = t_features[i]
         y = helper.get_expected_output(t_labels[i], output_size)
-        training_avg_error += mlp.train(x, y, alpha)
+        training_avg_error += network.train(x, y, alpha)
 
     training_avg_error /= len(t_labels)
     alpha = alpha*ALPHA_DEACY
@@ -99,9 +99,9 @@ for t in range(MAX_EPOCH_COUNT):
     print("Training avg error = {}".format(training_avg_error))
     print("Validation")
 
-    validation_performance = calc_mlp_performance()
+    validation_performance = calc_performance()
     print("Validation performance = {}%".format(validation_performance*100))
 
     if validation_performance > max_validation_performance:
         max_validation_performance = validation_performance
-        MlpBuilder.save_mlp(MLP_FILE_NAME, mlp)
+        ffn.Builder.save_ffn(NETWORK_FILE_NAME,network)

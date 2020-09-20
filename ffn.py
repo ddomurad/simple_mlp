@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 
 
-class Mlp:
+class FFN:
     def __init__(self):
         self.A = []
         self.Z = []
@@ -72,7 +72,7 @@ class Mlp:
         return 0.5 * np.square(np.sum((y - self.A[-1])))
 
 
-class MlpActivations:
+class Activations:
     @staticmethod
     def relu(z):
         return np.multiply(z, (z >= 0)) + np.multiply(0.1 * z, (z < 0))
@@ -90,29 +90,29 @@ class MlpActivations:
         return 1.0 - np.square(np.tanh(z))
 
 
-class MlpBuilder:
+class Builder:
 
     @staticmethod
-    def new_mlp(layers_size, activation_type) -> Mlp:
-        mlp = Mlp()
+    def new_ffn(layers_size, activation_type) -> FFN:
+        ffn = FFN()
 
         # initialize layer description
-        mlp.layers_size = layers_size[:]
-        mlp.layers_count = len(mlp.layers_size)
-        mlp.input_vector_size = mlp.layers_size[0]
-        mlp.output_vector_size = mlp.layers_size[-1]
+        ffn.layers_size = layers_size[:]
+        ffn.layers_count = len(ffn.layers_size)
+        ffn.input_vector_size = ffn.layers_size[0]
+        ffn.output_vector_size = ffn.layers_size[-1]
 
         # apply activation function
-        MlpBuilder._apply_activation_function(mlp, activation_type)
+        Builder._apply_activation_function(ffn, activation_type)
 
         for (layer_index, l_size) in enumerate(layers_size):
             # input layer
             if layer_index == 0:
                 # initialize A,Z,B,W for input layer (Z,B,W are not used in input the layer)
-                mlp.A.append(np.zeros((1, mlp.input_vector_size)))
-                mlp.Z.append(None)
-                mlp.W.append(None)
-                mlp.B.append(None)
+                ffn.A.append(np.zeros((1, ffn.input_vector_size)))
+                ffn.Z.append(None)
+                ffn.W.append(None)
+                ffn.B.append(None)
             # hidden or output layer
             else:
                 # prepare random W matrix with uniform distributions in range [-1, 1]
@@ -123,39 +123,39 @@ class MlpBuilder:
                 random_b_matrix = np.random.rand(1, l_size)
                 random_b_matrix = random_b_matrix*2 - 1
 
-                mlp.W.append(random_w_matrix)
-                mlp.B.append(random_b_matrix)
+                ffn.W.append(random_w_matrix)
+                ffn.B.append(random_b_matrix)
 
                 # prepare Z, A matrices for further usage
-                mlp.Z.append(np.zeros((1, l_size)))
-                mlp.A.append(np.zeros((1, l_size)))
+                ffn.Z.append(np.zeros((1, l_size)))
+                ffn.A.append(np.zeros((1, l_size)))
 
-        return mlp
+        return ffn
 
     @staticmethod
-    def save_mlp(file_path, mlp):
-        dump_data = [mlp.layers_size, mlp.activation_type, mlp.W, mlp.B]
+    def save_ffn(file_path, ffn):
+        dump_data = [ffn.layers_size, ffn.activation_type, ffn.W, ffn.B]
         with open(file_path, 'wb') as out_file:
             pickle.dump(dump_data, out_file)
 
     @staticmethod
-    def load_mlp(file_path):
+    def load_ffn(file_path):
         with open(file_path, 'rb') as in_file:
             dump_data = pickle.load(in_file)
-            mlp = MlpBuilder.new_mlp(dump_data[0], dump_data[1])
-            mlp.W = dump_data[2]
-            mlp.B = dump_data[3]
+            ffn = Builder.new_ffn(dump_data[0], dump_data[1])
+            ffn.W = dump_data[2]
+            ffn.B = dump_data[3]
 
-            return mlp
+            return ffn
 
     @staticmethod
-    def _apply_activation_function(mlp, activation_type):
-        mlp.activation_type = activation_type
+    def _apply_activation_function(ffn, activation_type):
+        ffn.activation_type = activation_type
         if activation_type == "relu":
-            mlp.activation_fnc = MlpActivations.relu
-            mlp.activation_fnc_d = MlpActivations.relu_d
+            ffn.activation_fnc = Activations.relu
+            ffn.activation_fnc_d = Activations.relu_d
         elif activation_type == "tanh":
-            mlp.activation_fnc = MlpActivations.tanh
-            mlp.activation_fnc_d = MlpActivations.tanh_d
+            ffn.activation_fnc = Activations.tanh
+            ffn.activation_fnc_d = Activations.tanh_d
         else:
             raise ValueError("Invalid network activation type")
